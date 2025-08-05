@@ -19,13 +19,13 @@ def add_item():
     qty = qty_var.get().strip()
     price = price_var.get().strip()
 
-    if name and qty.isdigit() and price.replace('.', '', 1).isdigit():
+    if name and qty.isdigit() and price.isdigit():
         inventory.append({"name": name, "qty": int(qty), "price": float(price)})
         save_data()
         refresh_table()
         clear_fields()
     else:
-        messagebox.showwarning("Input Error", "Enter valid name, quantity and price")
+        messagebox.showwarning("Input Error", "Enter valid name, qty and price")
 
 def edit_item():
     selected = tree.selection()
@@ -50,10 +50,9 @@ def delete_item():
         save_data()
         refresh_table()
 
-def refresh_table(filtered=None):
+def refresh_table():
     tree.delete(*tree.get_children())
-    data = filtered if filtered is not None else inventory
-    for i, item in enumerate(data):
+    for i, item in enumerate(inventory):
         tree.insert("", "end", iid=i, values=(item["name"], item["qty"], f"₹{item['price']}"))
 
 def clear_fields():
@@ -61,47 +60,32 @@ def clear_fields():
     qty_var.set("")
     price_var.set("")
 
-def on_exit():
-    if messagebox.askokcancel("Exit", "Do you really want to exit?"):
-        root.destroy()
-
-def search_items(*args):
-    query = search_var.get().strip().lower()
-    if query == "":
-        refresh_table()
-    else:
-        filtered = [item for item in inventory if query in item["name"].lower()]
-        refresh_table(filtered)
-
-# GUI
 root = tk.Tk()
 root.title("Inventory Manager")
-root.geometry("520x550")
-root.protocol("WM_DELETE_WINDOW", on_exit)  # Exit confirmation
+root.geometry("500x500")
 
-name_var, qty_var, price_var, search_var = tk.StringVar(), tk.StringVar(), tk.StringVar(), tk.StringVar()
+name_var, qty_var, price_var = tk.StringVar(), tk.StringVar(), tk.StringVar()
 inventory = load_data()
 
-# Input Fields
 tk.Label(root, text="Product Name:").pack()
 tk.Entry(root, textvariable=name_var).pack()
 tk.Label(root, text="Quantity:").pack()
 tk.Entry(root, textvariable=qty_var).pack()
 tk.Label(root, text="Price:").pack()
 tk.Entry(root, textvariable=price_var).pack()
+
 tk.Button(root, text="Add Item", command=add_item).pack(pady=5)
 
-# Search Bar
-tk.Label(root, text="Search:").pack()
-search_entry = tk.Entry(root, textvariable=search_var)
-search_entry.pack(pady=5)
-search_var.trace_add("write", search_items)
+tree = ttk.Treeview(root, columns=("Name", "Qty", "Price"), show="headings")
+tree.heading("Name", text="Name")
+tree.heading("Qty", text="Quantity")
+tree.heading("Price", text="Price")
+tree.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-# Treeview with Scrollbar
-frame = tk.Frame(root)
-frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+btn_frame = tk.Frame(root)
+btn_frame.pack()
+tk.Button(btn_frame, text="Edit", command=edit_item).grid(row=0, column=0, padx=5)
+tk.Button(btn_frame, text="Delete", command=delete_item).grid(row=0, column=1, padx=5)
 
-tree_scroll = tk.Scrollbar(frame)
-tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
-
-tree = ttk.Treeview(frame, columns=("Nam
+refresh_table()
+root.mainloop() 
